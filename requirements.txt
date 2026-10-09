@@ -2,3 +2,4 @@
 joblib
 anthropic
 pandas
+streamlit

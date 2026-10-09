@@ -129,3 +129,36 @@ if __name__ == "__main__":
         check(arg)
     else:
         print(f"Unknown command: {cmd}")
+
+def classify_text(subject, sender, body, pipe=None):
+    """Same logic as check(), but returns a dict instead of printing.
+    Used by the Streamlit app."""
+    if pipe is None:
+        pipe = joblib.load(MODEL_PATH)
+
+    text = f"{subject}\n{body}"
+    prob = pipe.predict_proba([text])[0]
+    classes = list(pipe.classes_)
+    spam_idx = classes.index("spam") if "spam" in classes else 1
+    spam_prob = float(prob[spam_idx])
+
+    if spam_prob < LLM_LOW:
+        label, stage, reason = "ham", "ml", "ML confident it's not spam"
+    elif spam_prob > LLM_HIGH:
+        label, stage, reason = "spam", "ml", "ML confident it's spam"
+    else:
+        result = ask_llm(subject, sender, body)
+        if result:
+            label, reason = result
+            stage = "llm"
+        else:
+            label = "spam" if spam_prob > 0.5 else "ham"
+            stage = "ml (fallback)"
+            reason = "LLM unavailable; used ML score"
+
+    return {
+        "label": label,
+        "confidence": spam_prob,
+        "stage": stage,
+        "reason": reason,
+    }
