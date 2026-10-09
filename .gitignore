@@ -1,0 +1,12 @@
+﻿venv/
+__pycache__/
+*.pyc
+*.joblib
+*.pkl
+data.csv
+spam.csv
+.env
+.vscode/
+.DS_Store
+
+*.zip
